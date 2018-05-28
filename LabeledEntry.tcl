@@ -1,3 +1,5 @@
+package provide LabeledEntry 0.1
+
 tk::Megawidget create LabeledEntry tk::SimpleWidget {
    variable w hull options
    method Create {} {

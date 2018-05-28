@@ -1,4 +1,4 @@
-package require TclOO
+package provide DualListbox 0.1
 
 tk::Megawidget create DualListbox tk::SimpleWidget {
   variable w hull options
