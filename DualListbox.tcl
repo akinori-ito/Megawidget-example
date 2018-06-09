@@ -1,53 +1,55 @@
 package provide DualListbox 0.1
+package require ComposedWidget
 
-tk::Megawidget create DualListbox tk::SimpleWidget {
-  variable w hull options
+tk::Megawidget create DualListbox ComposedWidget {
+  variable w hull options forwardlist
   method Create {} {
-     my variable i arg1 arg2
-     set arg1 {}
-     set arg2 {}
-     foreach {optsw val} [array get options] {
-        switch $optsw {
-        -width               {
-           lappend arg1 $optsw
-           lappend arg2 $optsw
-           if {[llength $val] > 1} {
-              lappend arg1 [lindex $val 0]
-              lappend arg2 [lindex $val 1]
-           } else {
-              lappend arg1 $val
-              lappend arg2 $val
-           }
-        }
-        -listvariable        {
-           if {[llength $val] > 1} {
-              lappend arg1 -listvariable
-              lappend arg2 -listvariable
-              lappend arg1 [lindex $val 0]
-              lappend arg2 [lindex $val 1]
-           } else {
-              lappend arg1 -listvariable
-              lappend arg1 $val
-           }
-        }
-        default    {
-           lappend arg1 $optsw
-           lappend arg2 $optsw
-           lappend arg1 $val
-           lappend arg2 $val
-        }
-        }
-     }
-     eval [concat listbox $hull.list0 $arg1]
-     eval [concat listbox $hull.list1 $arg2]
+     variable opt0 opt1 myopt
+     set opt0 {-activestyle -background -borderwidth -cursor -disabledforeground
+               -exportselection -font -foreground -height -highlightbackground
+               -highlightcolor -highlightthickness -justify -relief -selectbackground
+               -selectborderwidth -selectforeground -selectmode -setgrid -state -takefocus
+               -xscrollcommand -yscrollcommand}
+     set opt1 $opt0
+     set myopt {-width -listvariable}
+     listbox $hull.list0
+     listbox $hull.list1
+     set forwardlist \
+       [list $hull.list0 $opt0 \
+             $hull.list1 $opt1 \
+             $w $myopt]
+     $w forwardoption
      grid $hull.list0 -column 0 -row 0 -sticky news
      grid $hull.list1 -column 1 -row 0 -sticky news
   }
-  method spread {args} {
-     eval [concat $hull.list0 $args]
-     eval [concat $hull.list1 $args]
+  method configure {optsw val} {
+    switch $optsw {
+      -width {
+        if {[llength $val] == 2} {
+          $hull.list0 configure -width [lindex $val 0]
+          $hull.list1 configure -width [lindex $val 1]
+        } else {
+          $hull.list0 configure -width $val          
+        }
+      }
+      -listvariable {
+        if {[llength $val] == 2} {
+          $hull.list0 configure -listvariable [lindex $val 0]
+          $hull.list1 configure -listvariable [lindex $val 1]
+        } else {
+          $hull.list0 configure -listvariable $val          
+        }        
+      }
+      default {
+        next $optsw $val
+      }
+    }
   }
-  method activate {index} {[self] spread activate $index}
+  method spread {args} {
+     $hull.list0 {*}$args
+     $hull.list1 {*}$args
+  }
+  method activate {index} {$w spread activate $index}
   method bbox {index} {
     my variable bb1 bb2
     set bb1 [$hull.list0 bbox $index]
@@ -57,8 +59,8 @@ tk::Megawidget create DualListbox tk::SimpleWidget {
   method curselection {} {
     return [$hull.list0 curselection]
   }
-  method delete {args} {eval [concat [self] spread delete $args]}
-  method get {args} {return [eval [concat $hull.list0 get $args]]}
+  method delete {args} {$w spread delete {*}$args}
+  method get {args} {return [$hull.list0 get {*}$args]}
   method index {ind} {return [$hull.list0 index $ind]}
   method insert {args} {
     set widget $hull.list0
@@ -66,12 +68,12 @@ tk::Megawidget create DualListbox tk::SimpleWidget {
        set widget $hull.list[lindex $args 1]
        set args [lreplace $args 0 1]
     }
-    eval [concat $widget insert $args]
+    $widget insert {*}$args
   }
-  method selection {args} {return [eval [concat [self] spread selection $args]]}
+  method selection {args} {return [$w spread selection {*}$args]}
   method size {} {return [$hull.list0 size]}
-  method xview {args} {eval [concat [self] spread xview $args]}
-  method yview {args} {eval [concat [self] spread yview $args]}
+  method xview {args} {$w spread xview {*}$args}
+  method yview {args} {$w spread yview {*}$args}
 
   method GetSpecs {} {
     return {{-activestyle activeStyle ActiveStyle underline underline} 

@@ -1,12 +1,13 @@
 package provide LabeledEntry 0.1
+package require ComposedWidget
 
-tk::Megawidget create LabeledEntry tk::SimpleWidget {
-   variable w hull options
+tk::Megawidget create LabeledEntry ComposedWidget {
+   variable w hull options forwardlist
    method Create {} {
-     my variable lblopt entopt bothopt
+     variable lblopt entopt bothopt
      set lblopt {-activebackground -activeforeground -anchor -bitmap -compound -height -highlightbackground 
                       -image -justify -relief -underline -padx -pady -text -wraplength }
-     set bothopt {-background -bd -bg -borderwidth -cursor -font -foreground -highlightcolor -highlightthickness
+     set bothopt {-background -borderwidth -cursor -font -foreground -highlightcolor -highlightthickness
                       -state -takefocus}
      set entopt  {-disabledbackground -exportselection -highlightbackground -insertbackground
                            -insertborderwidth -insertofftime -insertontime -insertwidth -invalidcommand -invcmd
@@ -15,20 +16,9 @@ tk::Megawidget create LabeledEntry tk::SimpleWidget {
 
      label $hull.lbl
      entry $hull.ent
-     foreach {optsw val} [array get options] {
-        if {[lsearch $lblopt $optsw] >= 0} {
-            $hull.lbl configure $optsw $val
-        } elseif {[lsearch $entopt $optsw] >= 0} {
-            $hull.ent configure $optsw $val
-        } else {
-            $hull.lbl configure $optsw $val
-            $hull.ent configure $optsw $val
-        }
-     }
+     set forwardlist [list $hull.lbl [concat $lblopt $bothopt] $hull.ent [concat $entopt $bothopt]]
+     $w forwardoption
      pack $hull.lbl $hull.ent -side left
-   }
-   method forward {parts cmd arg} {
-      return [eval [concat $hull.$parts $cmd $arg]]
    }
    method get {} {return [$w forward ent get {}]}
    method insert {args} {return [$w forward ent insert $args]}
@@ -49,8 +39,6 @@ tk::Megawidget create LabeledEntry tk::SimpleWidget {
       {-underline underline Underline -1 -1}
       {-wraplength wrapLength WrapLength 0 0}
       {-background background Background SystemButtonFace SystemButtonFace}
-      {-bd borderWidth BorderWidth 2 2}
-      {-bg background Background SystemButtonFace SystemButtonFace}
       {-borderwidth borderWidth BorderWidth 2 2}
       {-cursor cursor Cursor {} {}} 
       {-font font Font TkDefaultFont TkDefaultFont}
